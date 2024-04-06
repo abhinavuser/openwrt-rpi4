@@ -1,0 +1,110 @@
+
+
+    ################################################## builds
+
+	NOTE: These builds are for the most part getting stale now
+          for my liking (unvalidated tweaks, app specific workarounds)
+          and however the move to 23.05.x has brought about an
+          opportunity to scrub out a decent amount of crud.
+
+
+          This move also sees no more graphical (constant) updatecheck
+          bar in luci. (there are luci > system > commands to check
+          and run an semi-auto update although the upgrade just spins
+          so it's pretty ambiguous and >
+
+
+
+```
+rpi-sysup-online.sh -R
+```
+
+
+or scp the image to tmp and standard-ish
+
+
+```
+sysupgrade -R /tmp/rpi4........img.gz
+```
+
+will be a better way for those that are comfortable
+
+
+
+    WHAT-IS-IT?: disk images of openwrt for the rpi-4... see thread
+                 or ../README for installation tips... based on
+                 snapshot(master) they include;
+
+                    -common drivers ( usb nic / lte / etc. )
+                    -larger default partitions
+                    -luci + luci-theme-argon
+                    -applications
+                    -some installation/setup tweaks and customisations
+
+ 
+    IMAGE-TYPES:
+
+        "sys" = sysupgrade
+        "fac" = factory
+
+
+
+      VARIANTS:
+
+                 * 'extra/full' and
+                 * 'std/basic/halffull' (periodic due to low demand)
+
+             recommended to use the 'extra/full' as these will likely throw out
+             the packagesrestore logic and there are no markers within the image
+             re: variant... ( note: if you did a fresh install with the std/basic
+             variant and always use this variant then above would not apply )
+
+
+
+    ################################################ versioning notes
+        
+        r12345 = openwrt checkout revision
+        1.x.x  = community version
+        x.N.x  = community something major changed (vermagix, major patches for bcm2711 etc.)
+        23456  = files revision
+        
+
+
+
+    
+        any folder labelled beta,testing,unstable etc... can be ignored unless you are feeling
+        lucky...
+
+        upgrading on each (stable) release is not really beneficial unless you are feeling lucky,
+        need a feature, are a power user or would like to help with testing / ironing out bugs...
+
+
+        history seems to indicate that every 5-10 builds or so there are enough changes either to
+        community package-set/features or official code to justify upgrading...
+        or ~r15xxx(yourversion)
+
+                +100-250(smallchanges especially for packages)
+                +350-550(likely some target changes)
+                +700+(fair amount of change and major bugfixes)
+
+        however... on master a single commit can also change something important... build wise
+        these kinds of changes generally are posted at the top of this document or on the
+        forum thread... and where relavent build numbers are changed/or are labelled as test
+
+
+
+
+    ################################################ supplimental file notes
+
+            -diff-ing manifest across folders yields key package differences
+            -../CHANGES contains terse notes on recent community additions and changes
+            -packages.txt contains all "extra" added packages
+            -rebuild.sh is a cmdline based imagebuilder rebuild command without 'files'
+            -ibbuildinformation can be used also to rebuild or verify finer build details
+
+
+
+
+
+
+

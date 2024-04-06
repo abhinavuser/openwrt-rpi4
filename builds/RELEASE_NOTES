@@ -1,0 +1,502 @@
+
+
+        ##################################### RELEASE NOTES
+
+
+
+
+
+		20240407 -> 23.05.3 (.2)
+                       -build against new release...
+                          -wifi stuff looks like might need manual updating again TBA
+                          -personally had major issue with no/incorrect /dev/console
+                           related to some config.txt/inittab stuff that I think should
+                           only effect mostly me at this stage... causes most custom
+                           scripts to hang when no console device is present / correct?
+                           this has happened before and is a note for myself to better
+                           handle, especially if building post 5.15 anything!!!
+
+
+
+
+
+		20240105on -> 23.05.2 (.21+)
+                       -shrink base build (to 22.05 level -7M) below by removing large crud and
+                       -speed up upgrade fboot approx 20%
+                       -hmmm... unable to disable acme (keeps messing with cron) but pretty uneventful
+                        could be something local... keep working on it / looking for hints
+
+
+		20231231 -> 23.05.2
+		###################################### rpi4.64-23.05.2-29356-3.0.6-3-r23630-ext4-sys.img.gz
+		Um... no time to maintain much but hate to leave stale images up so have to bite the
+		bullet and push forward...
+
+                Build is "as-is" for an option (nft) for others, likely mostly usable for those needing
+                the usbboot features but that might be about it...
+
+
+		NOTES:
+
+                        hmmm cannot disable acme... could be build specific bug or normal?
+                        (adds / re-adds cronjob)
+
+                        its likely that many config files have changed significantly and i'm no
+                        longer handling fixups so suggest installing fresh or go through services
+                        one by one and -reinstall --maintainer or copy PACKAGE-opkg over the config
+                        in /etc/config, specifically, banip and adblock maybe dnsmasq etc. etc.
+
+
+			edit: nope below AMA1 is master/kernel 6.1 only
+                         ref: https://github.com/raspberrypi/linux/issues/5566#issuecomment-1667431600
+
+                      afair master didnt have the /dev/serialX hotplug.json device creation handling
+
+                              console (AMA1 > AMA2 or whatever) is instantiated differently so you'll
+                              probably see some output errors about /dev/console not existing until
+                              fixed ( or you can change your /boot/cmdline.txt andor /etc/inittab )
+
+
+
+                        pulled alot of custom setup (lots more to ditch) /
+                        migrate stuff out mostly for services
+                        as i'm not up to date with them, still need to pull out sqm stuff
+                        start with a fresh install maybe if unsure but upgrade mostly worked for me
+
+			APOLOGIES: Forgot was running/testing snapshot last and I did have to
+                        use/copy the new banip config file / fix compat issues...
+                        Also trashed alot of dnsmasq oldstyle ipset entries
+
+
+                        removed luci-app-simpleadblock to make it build (package renamed? removed?)
+                        (just the luci app...)
+
+                        no upgradebar / (luci update notice) in 23.05 :(
+
+                        didnt get around to polishing the agh integration moved to hotplug for
+                        watcher but dont think the one included works :(
+
+			TODO: remove fakeinternet / wireshark helper packages
+                              hmmm.... acme put some scheduled tasks in... never seen that...
+                              fix agh integration / hotplug / settings derivation
+
+
+
+		KEY EXPIRED so HAVE to start new, FORCE or download new key;
+
+> curl -sSL https://github.com/wulfy23/rpi4/raw/master/utilities/a01ad0f277372936 > /etc/opkg/keys/a01ad0f277372936
+
+
+
+
+
+
+          NOTE: UPGRADE PROCESS (at least for me) IS NOW TAKING QUITE A BIT LONGER
+                SO PLEASE ALLOW AROUND 12MINS BEFORE COMING BACK/LOGGINGIN/CHECKING INTERNET
+                ETC
+
+
+
+
+                ############################# rpi-4_22.03.5_2.1.17-10+ are 'testing' flavour
+                   -larger image contains adguardhome and intended for testing with
+                    ENABLED_SERVICES="... agh" in /root/wrt.ini
+
+                    DO NOT INSTALL UNLESS YOU ARE ADVANCED
+
+
+
+                ############################# master pbr include
+                   -noticed a new firewall config include script related to pbr
+                    its benign for now (need to check on downgrade) 
+
+
+                ############################# rpi4.qos ipset cleanup
+                    rpi-4_snapshot_7.1.93-17_r23001_extra+
+
+                   -migration to and from master(nft) on prev master builds for anyone
+                    using (or used in the past) rpi4.qos seems to have created a
+                    sort of ipset migration race condition (my masq failed to start
+                    all of a sudden (current master WITHOUT rpi4.qos running for
+                    several boots
+
+                    i've added ipset cleanup code to the build to try to prevent
+                    masq issues / bloating of dhcp config
+                    (well technically it should have cleaned this from the
+                     beginning anyway)
+
+                    while i'm hoping it does not trash any user ipsets that are
+                    present let me know if this happens...
+
+                    it may however cause a long "hang" (approx additional
+                    120secs max) when stopping sqm or upgrading...
+                    the first time it runs, apologies for this
+                   
+
+
+                    just to clarify / restate;
+                       on MASTER: rpi4.qos is actually layer_cake (so sqm still starts)
+                              (scraping will happen on next upgrade/firstboot)
+
+                       on RELEASE: rpi4.qos is still there with scraping on sqm stop
+                                   AND firstboot
+
+
+
+
+                     -simple-adblock / https-dns-proxy here we go again, this time
+                      just try to scrub dhcp config of these services prior to
+                      and before firstboot
+                        22.03.5-13+
+                        r23001-7 plus
+
+
+
+
+                ############################# r23001 snapshot nft beta / test / cleanup build
+                   -HAVE NOT TESTED THIS YET > EDIT basic test
+                   -RECOMMEND putting on an entirely separate SDCARD if you will be testing this
+                   -BACKUP your banip(masq?/other?) config file if you are downgrading back to 22.x
+                   -Also suggest switching off rpi4.qos if you are using it before upgrading
+
+                   It has been some time since last master build. There were some changes in
+                   fundamental package selections.
+                 
+                   Before cleaning it up more, good to have an image out there for various
+                   carp / foundation issues to be known
+
+                   1. It's bigger
+                   2. Last time I tried master it was running fairly quick, i'd say a little
+                      faster than 22.03.x but that's decent too will report back here anything
+                      in this of note
+                   3. No update to rpi bootstrap (elf/dat) has been made (yet)
+                   4. Apparently wifi may be whacky on these boards of recent month(s)...
+                      not planning on touching wifi but lets see how it fairs and is
+                      a good point of comparison with 22.x
+                       edit: afaik maybe got better after this around late may
+
+                   5. interesting delay for wan carrier could be from me using kickanic,
+                      docsis update, netifd or similar 30-50 secs hang after nic
+                      renamed to lan bringup... can live with but kinda hefty in context
+                       edit: hmmm... actually watching the wan usb nic coming up
+                             seems like it could be coming up earlier also possibly
+                             and HFC modem going into reset because of something
+                             local / changing the MAC late?
+                      
+
+                      * stage2 custom info was not visible... likely a 22.03.5 thing?... 
+                          or my serial stuff which seemed a little off too...
+
+
+                ############################# 23.03.5
+                   -um... rev5 general function ok
+                    a few app things creeping in maybe
+                    of note: update base is there but not flash link
+
+                ############################# 23.03.3
+                   -as im not really running / tracking this branch much key
+                    application / application config changes or other
+                    may take time to surface (please report!)
+
+                   -vpn-policy-routing > pbr
+                    you'll need to update/change your config/ENABLED_SERVICES
+                    if you use this service, as yet i'm not auto handling this
+                    due to unknown complexities with config migration
+                    if app handles(config migration) let me know and i'll try to add some logic
+                    for the service autostart fixup
+
+                    IF YOU RUN THIS SERVICE suggest putting config file in place or checking if
+                    its automigrated before updating... and update your ENABLED_SERVICES with 'pbr'
+                    before upgrading
+
+                    (app name change midrelease is kinda odd)
+
+
+
+                ############################# r212xxx
+                  -afaict argon theme is now broken?
+                  -no more updatecheck bar at all :(
+                  -dnsmasq(default variant?) on master now has no ipset support and
+                   does not correctly identify/setup nftsets in parrallel support
+
+
+                  -NOTE from subversion 5 we are testing FW4/NFTABLES please dont
+                   install 'current' / master if you are unfamiliar with manually
+                   verifying some fundamental functions on the command line
+                   (firewall rules, services running etc.) at least for a week
+                   or three...
+ 
+                   While I am reasonably comfortable with general function... it's
+                   edge cases or legacy logic we need to verify is up to chuff...
+
+
+
+
+##########################################################################################3
+########################################### DEMARK COMMENTS BELOW GETTING OLD
+###########################################################################################
+		
+
+
+
+		### FROM AROUND 23.05 changover... argon / argon app is known to need work
+                    or not working (app) etc. not a priority
+                    until / unless major break in argon theme
+
+
+
+
+
+		two builds below seem to not install argon config app, when resolved manually
+                bing background is not enabled like in previous theme version
+
+		was gonna try fix but it's erroring out on me... will just dump a config if does
+		not exist
+
+
+
+
+
+
+        note: there is no ujail(added back r19003 removed post due to simple-adblock issue)
+              or fw4 on the master builds
+              (but I am happy to make one for you if you wish)
+
+
+
+
+
+
+
+
+
+
+
+
+		############################# 22.03 + r20xxx untested > .7 tested a bit
+
+
+      
+            -note: ujail and seccomp crept back in on these builds although we've dabbled
+                  with them on and i've endeavored to enable them somewhat, last build
+                  had them off afaik as they effected https-dns-proxy's function
+
+                  if this is the case, i'll use the testing 'flavour' for a build without
+                  them unless there is more foundational issues with them.
+
+                  apologies for not stating/noticing this earlier
+
+
+
+
+           if luci login fails make sure to type "https://" at
+           the start of url...
+
+           FIXED-ISH MAYBE
+           
+           -sqm dual fw support broken -> workaround added but might effect
+            anyone advanced trying to switch to nft manually (which a seperate
+            image will be better for probably at this stage anyway given how often
+            and varied packages break when altered for fw changes)
+           
+          -updatecheck bar (flash and msg is not functional > hotfix in progress)
+          workaround for no flash button/link in updatecheck bar once logged in (subversions before 7)
+
+```
+sed -i 's/\!sysauth=\!/\!sysauth_https=\!/g' /bin/updatecheck.sh
+```
+edit 20221111 above probably not enough sadly...
+
+may be some weeks if at all it comes back (without some help) ... i'm going to check stabe/release
+to see if it's still working there first...
+
+           
+            TOFIX
+           
+           -20221111 getting disk full messages... likely something on my end maybe, need to
+            look into if it's just versioned rubbish buildup or something more 'fast'
+            is happening
+
+
+           -possible acme changes/new workarounds needed
+           -ipv6 wan connection on my link hits firstboot failsafe code
+            (not coming up) afaik this has been an issue going back 7+months
+            (to test more on non-firstboot as first step)
+            NB: firstboot times are stretched an additional ~1+mins from this
+                (albeit can use some attention anyway)
+           -masq seems to have changed a bit a look like it needs some love which
+            will likely need to be version specific
+
+
+       ############################## 7.1.13 - k5.15test - r19686
+
+            kernel was updated to 5.15 test build, i have to tested this yet so
+            wait for a week / few days if you don't have dd backups or general
+            confidence based on other sources...
+
+            -uploaded as current but i'm aware of a few mostly minimal? places
+             where my/our logix does not accomodate it... for this week its mostly
+             for any brave souls whom are eager to test the new kernel and
+             investigate core function / quirks / performance etc.
+
+
+             a) on building kmod pwm was not available
+             b) hmmm... userspace seems alot more snappy
+             c) tailroom bug (rare) still present
+             d) um... my additional usb mount is spitting errors on (last build)
+                upgrade... looks like some sort of semi-newish brute ps kill
+                / term... and probably not so big a deal for most?
+                ... just noting here for a time reference...
+
+
+
+       ############################## 5.7.50 - k113 - r19602
+            -hmmm... I think this build http login fails(chrome) but https is ok...
+
+       ############################## 5.7.31-x_r19345
+            -uploaded as 'current'(>stable@05042022) flavour, i've limited time to test and
+             unaware of any CVE so can't/shouldn't push this as 'stable'
+             until a few users test/weeks pass to find bugs or issues
+               -nft-qos 'rate' still not working
+               -busybumped
+               -5.10.109
+
+       ############################## 5.7.9-x_r19171
+            -openssl>1.1.1n CVE-2022-0778
+
+       ############################## r19075/5.7.5-2~+
+           -nft-qos rate no longer displays
+            https://github.com/openwrt/luci/issues/5713
+           -kernel 5.10 (master) prior to 5.10.103 (r19075ish) has dirtypipe cve
+            priv-esc vuln (requires user / application access)
+            (build r19075 has 5.10.103)
+
+
+
+
+
+       ############################## docker user installation has issue
+                         -for all docker packages due to conflict between
+                          websockets-openssl(mosquitto) and
+                          websockets-full(luci-app-dockerman<ttyd)
+                          user is required to pass nodeps to opkg
+                             > opkg install --nodeps luci-app-dockerman
+                          (fyi all packages consume around 110M)
+
+
+
+       ############################## https-dns-proxy and/or simple-adblock
+                         -these services are known to be troublesome on
+                          upgrade, you may need to login and manually
+                          start/restart them and/or dnsmasq
+
+       
+
+       ############################### 20220303 remove 21.02.2 due to luci errors
+                          -bugger can't trigger again... leave 23 up in devel for a bit more
+                          -possible config > r19033 > 21.02.2 dg interaction
+                           (diff factory)
+                          -upg w argon selected?
+                          -'release' only output?
+                          -certain bannermsg?
+                          -messed with cascade.css browser cache?
+                          -half connected early browser cache?
+                          -cmdline login before luci opened? (sysinfo)
+                          -nb: dgd to 19 was still there something to do with
+                               welcomeback strings
+
+       ############################### r19xxx (19003 > 19039)
+                         -likely 'current/testing or just devel' for a while due to re-enable
+                          ujail and switch back to elf-dat current
+                          probably only kick it to stable once r18xxx becomes truly stale
+                             -simple-adblock issue reported with ujail removing procd-ujail
+                              and procd-seccomp resolves
+                         -also quite a few general logic tidying all over the place
+                          could cause some fallout in unknown places
+
+
+       ############################### r18913 or 21.02.2
+                        -user reports of not being able to reboot
+                         and/or odd issue with missing file?
+                         use busybox reboot -f and wait for newer builds or
+                         more diagnostic details
+
+                         possible lead re monitor connection / fw / mailbox / et al
+                         https://github.com/raspberrypi/firmware/issues/1559
+
+
+       ############################### r18913
+                        -minor CVE fix for tcpdump
+                        -support for reboot_recovery if ROOTFSEXPAND_DATAPART= was
+                         enabled on last/next upgrade
+
+
+
+
+       ############################## possible pppoe ipv6 masq logspam @master
+
+
+       ############################## bbr (5.0.77-7)
+                          -switched congestion tcp to bbr for fun report issues
+                           (afaik only really effects host based connections i.e.
+                            local services)
+
+
+
+       ##################################################### 5.1 fw4 notes: (manual install only)
+
+                          -probably mwan(y)/vpn-pbr(ipsets)/banip(y) etc wont work
+                           and firewall.user? which might mean miniupnpd or similar
+                          -rpi4.qos seems ok in parallel mode
+                          -although the upstream advice'
+                           is to use wrapper, parallel is currently much better with
+                           less breakage
+
+
+
+
+        ##### some dnsmasq CVE affecting 21.01.1 not sure about master level ~medium
+			  dependant upon exposure (topology)
+			http://lists.openwrt.org/pipermail/openwrt-devel/2022-January/037717.html
+
+
+        ##### ffmpeg glitch from ipkg meta on package restore
+              if switching between release and master (with -R)
+              can be ignored for now and likely no ill effects
+
+
+        #####~ r18609   nothing special, still fw3 and kernel bumped to 5.10.92
+                        fixed below CPUfreq issues
+
+        #####~ r18531(again)
+
+
+
+        ####################!!!!!!!!!!!!!!!!! THIS BUILD (5.0.19) HAS CPUFREQ PROBLEMS JUMP BACK TO r18531/5.0.11
+        #####~ r18609   nothing special, still fw3 and kernel bumped to 5.10.92
+                        #edit: gpu-fwreverted(well users of CM4 specifically seeed boards if any
+                         may wish to keep an eye on usb3 oddities moving forward)
+
+              -9        remove ujail again... possibly some altservice (wwan) issues
+                        https://forum.openwrt.org/t/rpi4-community-build/69998/1974?u=wulfy23
+                        edit:nope but 600Mhz applies
+
+              -23ish    flavour: stable revert to 5.0.11 / kernel 90 due to possible scaling issue and
+                        also remove ujail while at it for simpler troubleshooting
+                        short term
+
+              -23ish    flavour: current r18609 with fixed fw
+
+
+
+        #####~ r1853x+ has seeedstudio lan78xx kmod
+
+
+
+
+
+        firewall.getZoneColorStyle is not a function - https://github.com/openwrt/luci/issues/5728
+
+
+
+
